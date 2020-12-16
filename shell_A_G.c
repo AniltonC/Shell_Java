@@ -12,6 +12,7 @@ int wt;
 int frk;
 
 char *cmd;
+char *home;
 char cmdAux[4096];
 char pathAux[4096];
 
@@ -22,6 +23,7 @@ void pathColor()
     printf("\033[1;34m");
 }
 
+// Altera a cor do printf para o padrão
 void resetColor()
 {
     printf("\033[0m");
@@ -73,7 +75,7 @@ void pwd()
 
 void rm()
 {
-    char* arg = &cmd[3];
+    char *arg = &cmd[3];
     int removeu = remove(arg);
     if (!removeu)
     {
@@ -81,24 +83,56 @@ void rm()
     }
     else
     {
-        printf("%s não foi deletado\n",arg);
+        printf("%s não foi deletado\n", arg);
     }
-    
 }
 
-/////   MAIN    /////
-
-void main(int argc, char *argv[])
+// Altera o diretório corrente para o caminho desejado
+void changePath(char *path)
 {
-    pathColor();
-    printf("%s", getcwd(pathAux, 4096));
-    resetColor();
-    printf("$ ");
+    int change = chdir(path);
+    if (change == -1)
+        printf("cd: %s: No such file or directory\n", path);
+}
+
+// Avalia as variações do comando CD para alterar o diretório
+void cd()
+{
+    char *path = &cmd[3];
+    if (strcmp(path, "~") == 0)
+        changePath(home);
+    else
+        changePath(path);
+}
+
+void getCmd()
+{
+    char *actualPath = getcwd(pathAux, 4096);
+    if (strncmp(actualPath, home, strlen(home)) == 0)
+    {
+        pathColor();
+        printf("~%s", &actualPath[strlen(home)]);
+        resetColor();
+        printf("$ ");
+    }
+    else
+    {
+        pathColor();
+        printf("%s", getcwd(pathAux, 4096));
+        resetColor();
+        printf("$ ");
+    }
 
     fgets(cmdAux, 4096, stdin);
     cmd = &cmdAux[0];
     cmd[strlen(cmdAux) - 1] = '\0';
+}
 
+void main(int argc, char *argv[])
+{
+    home = getenv("HOME");
+
+    getCmd();
     while (strcmp(cmd, "exit") != 0)
     {
         if (strcmp(cmd, "pwd") == 0)
@@ -113,13 +147,11 @@ void main(int argc, char *argv[])
         {
             rm();
         }
+        else if (strncmp(cmd, "rm ", 3) == 0)
+        {
+            cd();
+        }
 
-        pathColor();
-        printf("%s", getcwd(pathAux, 4096));
-        resetColor();
-        printf("$ ");
-        fgets(cmdAux, 4096, stdin);
-        cmd = &cmdAux[0];
-        cmd[strlen(cmdAux) - 1] = '\0';
+        getCmd();
     }
 }
