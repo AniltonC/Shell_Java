@@ -6,6 +6,8 @@
 #include <sys/wait.h>
 
 /////   VARIÁVEIS GLOBAIS   /////
+#define BUFFERSIZE 1024
+#define COPYMORE 0644
 
 //forks , waits
 int wt;
@@ -105,6 +107,7 @@ void cd()
         changePath(path);
 }
 
+// Realiza a leitura dos comandos
 void getCmd()
 {
     char *actualPath = getcwd(pathAux, 4096);
@@ -128,13 +131,25 @@ void getCmd()
     cmd[strlen(cmdAux) - 1] = '\0';
 }
 
-void main(int argc, char *argv[])
+// void log()
+// {
+//     char *command = cmd;
+//     strcat(command, "\n");
+//     FILE *f;
+//     f = fopen("shell_AG.log", "a+"); // a+ (create + append) option will allow appending which is useful in a log file
+//     if(f != NULL)
+//         fprintf(f, *command);
+// }
+
+void main()
 {
     home = getenv("HOME");
 
     getCmd();
     while (strcmp(cmd, "exit") != 0)
     {
+        // log();
+
         if (strcmp(cmd, "pwd") == 0)
         {
             pwd();
@@ -147,11 +162,19 @@ void main(int argc, char *argv[])
         {
             rm();
         }
-        else if (strncmp(cmd, "rm ", 3) == 0)
+        else if (strncmp(cmd, "cd ", 3) == 0)
         {
             cd();
         }
-
+        else if (strcmp(cmd, "clear") == 0)
+        {
+            system("clear");
+        }
+        else
+        {
+            system(cmd);
+        }
+        
         getCmd();
     }
 }
